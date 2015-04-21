@@ -11,8 +11,11 @@
     <link rel="stylesheet" href="css/normalize.css">
     <link rel="stylesheet" href="css/main.css">
     <script src="js/vendor/modernizr-2.8.3.min.js"></script>
+
     <script src="js/three.min.js"></script>
+    <script src="js/threex.dynamictexture.js"></script>
     <script src="js/vendor/jquery-1.11.2.min.js"></script>
+
 </head>
 
 <body>
@@ -25,6 +28,12 @@
         var wireGeometry, wireMaterial;
         var grid;
         var center;
+
+        var material2048; //array of 12
+         //var material, material2 , material4 , material8 , material16 ;
+         //var material32, material64 , material128 , material256 , material512 ;
+         //var material1024, material2048 ;
+
         document.onkeydown = inputKey;
         init();
         animate();
@@ -45,6 +54,86 @@
             material = new THREE.MeshBasicMaterial({
                 color: col
             });
+
+
+            //var textGeom = new THREE.TextGeometry( 'Hello World!', {font: "hevletiker"} );
+            //scene.add(textGeom);
+
+            material2048 = new Array(12);
+            // for (var i = 0; i < 12; i++) {
+
+            var dynamicTexture = [];
+            for (var i = 0 ; i < 13; i++) {
+                
+                dynamicTexture[i] = new THREEx.DynamicTexture(128, 128);
+                dynamicTexture[i].context.font = "120px monospace";
+                dynamicTexture[i].clear('white');
+                
+                if ( Math.pow(2, i) > 10){
+                    dynamicTexture[i].drawText( Math.pow(2, i), 8, 96, 'black');
+                }else if ( Math.pow(2, i) > 100){
+                    dynamicTexture[i].context.font = "32px monospace";
+                    dynamicTexture[i].drawText( Math.pow(2, i), 8, 96, 'black');
+                }else{
+                    dynamicTexture[i].drawText( Math.pow(2, i), 32, 96, 'black');
+                }
+                
+                dynamicTexture[i].texture.needsUpdate = true;
+            }
+
+            material2048[0] = new THREE.MeshBasicMaterial({
+                color: 0x66FF66,
+                map: dynamicTexture[1].texture
+            });
+            material2048[1] = new THREE.MeshBasicMaterial({
+                color: 0x00CC00,
+                map: dynamicTexture[2].texture
+            });
+            material2048[2] = new THREE.MeshBasicMaterial({
+                color: 0x00FFCC,
+                map: dynamicTexture[3].texture
+            });
+            material2048[3] = new THREE.MeshBasicMaterial({
+                color: 0x00CCFF,
+                map: dynamicTexture[4].texture
+            });
+            material2048[4] = new THREE.MeshBasicMaterial({
+                color: 0x0099FF,
+                map: dynamicTexture[5].texture
+            });
+            material2048[5] = new THREE.MeshBasicMaterial({
+                color: 0x6666FF,
+                map: dynamicTexture[6].texture
+            });
+            material2048[6] = new THREE.MeshBasicMaterial({
+                color: 0xCC33FF,
+                map: dynamicTexture[7].texture
+            });
+            material2048[7] = new THREE.MeshBasicMaterial({
+                color: 0xCC0099,
+                map: dynamicTexture[8].texture
+            });
+            material2048[8] = new THREE.MeshBasicMaterial({
+                color: 0xFFFF66,
+                map: dynamicTexture[9].texture
+            });
+            material2048[9] = new THREE.MeshBasicMaterial({
+                color: 0xFF9966,
+                map: dynamicTexture[10].texture
+            });
+            material2048[10] = new THREE.MeshBasicMaterial({
+                color: 0xFF0000,
+                map: dynamicTexture[11].texture
+            });
+            material2048[11] = new THREE.MeshBasicMaterial({
+                color: 0x800000,
+                map: dynamicTexture[12].texture
+            });
+
+
+            // }
+
+
 
             wireGeometry = new THREE.BoxGeometry(0.9, 0.9, 0);
             wireMaterial = new THREE.MeshBasicMaterial({
@@ -123,8 +212,8 @@
                 var random = location[Math.floor(Math.random() * location.length)];
 
                 scene.remove(grid[random.y][random.x]);
-                grid[random.y][random.x] = new THREE.Mesh(geometry, material);
-                grid[random.y][random.x].name = "full";
+                grid[random.y][random.x] = new THREE.Mesh(geometry, material2048[0]);
+                grid[random.y][random.x].name = "2";
                 grid[random.y][random.x].position.x = center.x;
                 grid[random.y][random.x].position.y = center.y;
                 scene.add(grid[random.y][random.x]);
@@ -144,13 +233,25 @@
 
             if (e.keyCode == '37') {
                 //left arrow
+                HorizontalMerge();
+                MoveLeft();
                 AddRandom();
+
             } else if (e.keyCode == '38') {
                 //up arrow
+                VerticalMerge();
+                MoveUp()
+                AddRandom();
             } else if (e.keyCode == '39') {
                 //right arrow
+                HorizontalMerge();
+                MoveRight();
+                AddRandom();
             } else if (e.keyCode == '40') {
                 //down arrow
+                VerticalMerge();
+                MoveDown()
+                AddRandom();
             }
 
         }
@@ -163,21 +264,277 @@
 
 
 
-
         function MoveLeft() {
             "use strict";
-            
+
             for (var j = 0; j < 4; j++) {
+
                 for (var i = 1; i < 4; i++) {
 
-                    if (grid[j][i-1] == "empty") {
+                    if (grid[j][i].name != "empty") {
 
-                        
+                        for (var c = 0; c < i; c++) {
+
+                            if (grid[j][c].name == "empty") {
+                                Swap([j, i], [j, c]);
+
+                            }
+                        }
                     }
                 }
             }
+        }
 
 
+        function MoveRight() {
+            "use strict";
+
+            for (var j = 3; j >= 0; j--) {
+
+                for (var i = 2; i >= 0; i--) {
+
+                    if (grid[j][i].name != "empty") {
+
+                        for (var c = 3; c > i; c--) {
+
+                            if (grid[j][c].name == "empty") {
+                                Swap([j, i], [j, c]);
+
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function MoveDown() {
+            "use strict";
+
+            for (var i = 0; i < 4; i++) {
+
+                for (var j = 1; j < 4; j++) {
+
+                    if (grid[j][i].name != "empty") {
+
+                        for (var c = 0; c < j; c++) {
+
+                            if (grid[c][i].name == "empty") {
+                                Swap([j, i], [c, i]);
+
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function MoveUp() {
+            "use strict";
+
+            for (var j = 3; j >= 0; j--) {
+
+                for (var i = 3; i >= 0; i--) {
+
+                    if (grid[j][i].name != "empty") {
+
+                        for (var c = 3; c > j; c--) {
+
+                            if (grid[c][i].name == "empty") {
+                                Swap([j, i], [c, i]);
+
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function HorizontalMerge() {
+            "use strict";
+
+            //this shouldn't go over 2 because we only get 2 merge per line
+            var mergeCount = 0;
+
+            for (var j = 0; j < 4; j++) {
+
+                for (var i = 0; i < 3; i++) {
+
+
+                    if (grid[j][i].name != "empty") {
+
+                        for (var z = i + 1; z < 4; z++) {
+                            if (grid[j][z].name != "empty") {
+
+                                if (grid[j][i].name == grid[j][z].name) {
+                                    mergeBlock([j, i], [j, z]);
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+         //end of HorizontalMerge
+
+        function VerticalMerge() {
+            "use strict";
+
+            //this shouldn't go over 2 because we only get 2 merge per line
+            var mergeCount = 0;
+
+            for (var i = 0; i < 4; i++) {
+
+                for (var j = 0; j < 3; j++) {
+
+                    if (grid[j][i].name != "empty") {
+
+                        for (var z = j + 1; z < 4; z++) {
+                            if (grid[z][i].name != "empty") {
+
+                                if (grid[j][i].name == grid[z][i].name) {
+                                    mergeBlock([j, i], [z, i]);
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+         //end of VerticalMerge
+
+
+        function mergeBlock(a, b) {
+
+
+            var positionA = grid[a[0]][a[1]].position;
+            var positionB = grid[b[0]][b[1]].position;
+            scene.remove(grid[a[0]][a[1]]);
+            scene.remove(grid[b[0]][b[1]]);
+
+            if (grid[a[0]][a[1]].name == "2") {
+
+                grid[a[0]][a[1]] = new THREE.Mesh(geometry, material2048[1]);
+                grid[a[0]][a[1]].name = "4";
+
+                grid[b[0]][b[1]] = new THREE.Mesh(wireGeometry, wireMaterial);
+                grid[b[0]][b[1]].name = "empty";
+
+            } else if (grid[a[0]][a[1]].name == "4") {
+
+                grid[a[0]][a[1]] = new THREE.Mesh(geometry, material2048[2]);
+                grid[a[0]][a[1]].name = "8";
+
+                grid[b[0]][b[1]] = new THREE.Mesh(wireGeometry, wireMaterial);
+                grid[b[0]][b[1]].name = "empty";
+
+            } else if (grid[a[0]][a[1]].name == "8") {
+
+                grid[a[0]][a[1]] = new THREE.Mesh(geometry, material2048[3]);
+                grid[a[0]][a[1]].name = "16";
+
+                grid[b[0]][b[1]] = new THREE.Mesh(wireGeometry, wireMaterial);
+                grid[b[0]][b[1]].name = "empty";
+
+            } else if (grid[a[0]][a[1]].name == "16") {
+
+                grid[a[0]][a[1]] = new THREE.Mesh(geometry, material2048[4]);
+                grid[a[0]][a[1]].name = "32";
+
+                grid[b[0]][b[1]] = new THREE.Mesh(wireGeometry, wireMaterial);
+                grid[b[0]][b[1]].name = "empty";
+
+            } else if (grid[a[0]][a[1]].name == "32") {
+
+                grid[a[0]][a[1]] = new THREE.Mesh(geometry, material2048[5]);
+                grid[a[0]][a[1]].name = "64";
+
+                grid[b[0]][b[1]] = new THREE.Mesh(wireGeometry, wireMaterial);
+                grid[b[0]][b[1]].name = "empty";
+
+            } else if (grid[a[0]][a[1]].name == "64") {
+
+                grid[a[0]][a[1]] = new THREE.Mesh(geometry, material2048[6]);
+                grid[a[0]][a[1]].name = "128";
+
+                grid[b[0]][b[1]] = new THREE.Mesh(wireGeometry, wireMaterial);
+                grid[b[0]][b[1]].name = "empty";
+
+            } else if (grid[a[0]][a[1]].name == "128") {
+
+                grid[a[0]][a[1]] = new THREE.Mesh(geometry, material2048[7]);
+                grid[a[0]][a[1]].name = "256";
+
+                grid[b[0]][b[1]] = new THREE.Mesh(wireGeometry, wireMaterial);
+                grid[b[0]][b[1]].name = "empty";
+
+            } else if (grid[a[0]][a[1]].name == "256") {
+
+                grid[a[0]][a[1]] = new THREE.Mesh(geometry, material2048[8]);
+                grid[a[0]][a[1]].name = "512";
+
+                grid[b[0]][b[1]] = new THREE.Mesh(wireGeometry, wireMaterial);
+                grid[b[0]][b[1]].name = "empty";
+
+            } else if (grid[a[0]][a[1]].name == "512") {
+
+                grid[a[0]][a[1]] = new THREE.Mesh(geometry, material2048[9]);
+                grid[a[0]][a[1]].name = "1024";
+
+                grid[b[0]][b[1]] = new THREE.Mesh(wireGeometry, wireMaterial);
+                grid[b[0]][b[1]].name = "empty";
+
+            } else if (grid[a[0]][a[1]].name == "2048") {
+
+                grid[a[0]][a[1]] = new THREE.Mesh(geometry, material2048[10]);
+                grid[a[0]][a[1]].name = "1024";
+
+                grid[b[0]][b[1]] = new THREE.Mesh(wireGeometry, wireMaterial);
+                grid[b[0]][b[1]].name = "empty";
+                //player win
+
+            }
+
+
+
+
+            grid[a[0]][a[1]].position.add(positionA);
+            grid[b[0]][b[1]].position.add(positionB);
+            scene.add(grid[a[0]][a[1]]);
+            scene.add(grid[b[0]][b[1]]);
+
+        }
+
+
+        function makeBlock(str) {
+
+            var block;
+            if (str == "full") {
+
+                block = new THREE.Mesh(wireGeometry, wireMaterial);
+                block.name = "empty";
+
+                return block;
+            }
+
+        }
+
+
+        function Swap(a, b) {
+
+
+            var tmp = grid[a[0]][a[1]];
+            grid[a[0]][a[1]] = grid[b[0]][b[1]];
+            grid[b[0]][b[1]] = tmp;
+
+
+        }
+
+        function CheckGridName(x, y) {
+
+
+            return grid[y][x].name;
         }
     </script>
 
