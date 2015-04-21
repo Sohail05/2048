@@ -1,27 +1,195 @@
 <!doctype html>
 <html class="no-js" lang="">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="x-ua-compatible" content="ie=edge">
-        <title>WebGL 2048</title>
-        <meta name="description" content="">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <link rel="stylesheet" href="css/normalize.css">
-        <link rel="stylesheet" href="css/main.css">
-        <script src="js/vendor/modernizr-2.8.3.min.js"></script>
-    </head>
-    <body>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>WebGL 2048</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/main.css">
+    <script src="js/vendor/modernizr-2.8.3.min.js"></script>
+    <script src="js/three.min.js"></script>
+    <script src="js/vendor/jquery-1.11.2.min.js"></script>
+</head>
+
+<body>
 
 
-        
-         
-        
-        
-        
-        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-        <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.11.2.min.js"><\/script>')</script>
-        <script src="js/plugins.js"></script>
-        <script src="js/main.js"></script>
-    </body>
+    <script>
+        "use strict";
+        var scene, camera, renderer;
+        var geometry, material, mesh;
+        var wireGeometry, wireMaterial;
+        var grid;
+        var center;
+        document.onkeydown = inputKey;
+        init();
+        animate();
+
+        function init() {
+            "use strict";
+
+            scene = new THREE.Scene();
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
+            camera.position.z = 5;
+            camera.position.x = 1.5;
+            camera.position.y = 1.5;
+            center = new THREE.Vector2(1.5, 1.5);
+
+            geometry = new THREE.BoxGeometry(0.9, 0.9, 0.9);
+            var col = new THREE.Color(Math.random(), Math.random(), Math.random())
+            material = new THREE.MeshBasicMaterial({
+                color: col
+            });
+
+            wireGeometry = new THREE.BoxGeometry(0.9, 0.9, 0);
+            wireMaterial = new THREE.MeshBasicMaterial({
+                color: 0xffffff,
+                wireframe: true
+            });
+
+            mesh = new THREE.Mesh(geometry, material);
+
+            grid = new Array(4);
+            for (var j = 0; j < 4; j++) {
+                grid[j] = new Array(4);
+                for (var i = 0; i < 4; i++) {
+
+                    grid[j][i] = new THREE.Mesh(wireGeometry, wireMaterial);
+                    grid[j][i].name = "empty";
+                    scene.add(grid[j][i]);
+                }
+            }
+
+
+
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+
+            document.body.appendChild(renderer.domElement);
+            AddRandom();
+
+        }
+
+        function animate() {
+            "use strict";
+            requestAnimationFrame(animate);
+
+            for (var j = 0; j < 4; j++) {
+                for (var i = 0; i < 4; i++) {
+
+                    if (grid[j][i] != null) {
+
+                        //array[j][i].position.x = lerp(array[j][i].position.x, i, 0.1);
+                        //array[j][i].position.y = lerp(array[j][i].position.y, j, 0.1);
+                        grid[j][i].position.lerp(new THREE.Vector3(i, j, 0), 0.1);
+                    }
+                }
+            }
+
+
+            renderer.render(scene, camera);
+
+        }
+
+
+         //left arrow	37
+         //up arrow	    38
+         //right arrow	39
+         //down arrow	40
+
+
+        function AddRandom() {
+            "use strict";
+            var location = [];
+
+            for (var j = 0; j < 4; j++) {
+                for (var i = 0; i < 4; i++) {
+
+                    if (grid[j][i].name == "empty") {
+
+                        location.push(new THREE.Vector2(i, j));
+                    }
+                }
+            }
+
+
+            if (location.length > 0) {
+
+                var random = location[Math.floor(Math.random() * location.length)];
+
+                scene.remove(grid[random.y][random.x]);
+                grid[random.y][random.x] = new THREE.Mesh(geometry, material);
+                grid[random.y][random.x].name = "full";
+                grid[random.y][random.x].position.x = center.x;
+                grid[random.y][random.x].position.y = center.y;
+                scene.add(grid[random.y][random.x]);
+                return 0;
+            }
+
+            return 1;
+
+        }
+
+
+
+
+        function inputKey(e) {
+            "use strict";
+            e = e || window.event;
+
+            if (e.keyCode == '37') {
+                //left arrow
+                AddRandom();
+            } else if (e.keyCode == '38') {
+                //up arrow
+            } else if (e.keyCode == '39') {
+                //right arrow
+            } else if (e.keyCode == '40') {
+                //down arrow
+            }
+
+        }
+
+         //This is to give the smooth movement effect 
+        function lerp(v0, v1, t) {
+            "use strict";
+            return (1 - t) * v0 + t * v1;
+        }
+
+
+
+
+        function MoveLeft() {
+            "use strict";
+            
+            for (var j = 0; j < 4; j++) {
+                for (var i = 1; i < 4; i++) {
+
+                    if (grid[j][i-1] == "empty") {
+
+                        
+                    }
+                }
+            }
+
+
+        }
+    </script>
+
+
+
+
+    <!--   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>-->
+    <script>
+        window.jQuery || document.write('<script src="js/vendor/jquery-1.11.2.min.js"><\/script>')
+    </script>
+    <script src="js/plugins.js"></script>
+    <script src="js/main.js"></script>
+</body>
+
 </html>
