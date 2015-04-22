@@ -20,19 +20,44 @@
 
 <body>
 
+    <section id="info">
+
+        <h2>WebGL 2048</h2>
+
+        <p>Controls:
+            <br>&#8592; &#151; LEFT ARROW
+            <br>&#8594; &#151; RIGHT ARROW
+            <br>&#8593; &#151; UP ARROW
+            <br>&#8595; &#151; DOWN ARROW
+            <br>[ENTER] &#151; RESET
+        </p>
+
+
+    </section>
 
     <script>
         "use strict";
+
+         //By Sohail Ajmal twitter@Sohail05
+
         var scene, camera, renderer;
         var geometry, material, mesh;
         var wireGeometry, wireMaterial;
         var grid;
         var center;
+        var initiater = 0;
+        var score = 0;
+        var topScore = 0;
+        var scoreBox;
+        var topScoreBox;
+        var scoreTexture;
+        var topScoreTexture;
+        var scoreMaterial;
+        var topScoreMaterial
+        var debug = true;
 
-        var material2048; //array of 12
-         //var material, material2 , material4 , material8 , material16 ;
-         //var material32, material64 , material128 , material256 , material512 ;
-         //var material1024, material2048 ;
+         //2 4 8 16 32 64 128 256 1024 2048
+        var material2048;
 
         document.onkeydown = inputKey;
         init();
@@ -40,6 +65,8 @@
 
         function init() {
             "use strict";
+
+            score = 0;
 
             scene = new THREE.Scene();
 
@@ -49,35 +76,37 @@
             camera.position.y = 1.5;
             center = new THREE.Vector2(1.5, 1.5);
 
-            geometry = new THREE.BoxGeometry(0.9, 0.9, 0.9);
+            geometry = new THREE.BoxGeometry(0.9, 0.9, 0.0);
             var col = new THREE.Color(Math.random(), Math.random(), Math.random())
             material = new THREE.MeshBasicMaterial({
                 color: col
             });
 
-
-            //var textGeom = new THREE.TextGeometry( 'Hello World!', {font: "hevletiker"} );
-            //scene.add(textGeom);
-
             material2048 = new Array(12);
-            // for (var i = 0; i < 12; i++) {
 
             var dynamicTexture = [];
-            for (var i = 0 ; i < 13; i++) {
-                
+            for (var i = 0; i < 13; i++) {
+
                 dynamicTexture[i] = new THREEx.DynamicTexture(128, 128);
-                dynamicTexture[i].context.font = "120px monospace";
                 dynamicTexture[i].clear('white');
-                
-                if ( Math.pow(2, i) > 10){
-                    dynamicTexture[i].drawText( Math.pow(2, i), 8, 96, 'black');
-                }else if ( Math.pow(2, i) > 100){
-                    dynamicTexture[i].context.font = "32px monospace";
-                    dynamicTexture[i].drawText( Math.pow(2, i), 8, 96, 'black');
-                }else{
-                    dynamicTexture[i].drawText( Math.pow(2, i), 32, 96, 'black');
+
+                if ((Math.pow(2, i) > 0) && (Math.pow(2, i) < 10)) {
+                    dynamicTexture[i].context.font = "120px monospace";
+                    dynamicTexture[i].drawText(Math.pow(2, i), 30, 100, 'black');
+                } else if ((Math.pow(2, i) > 10) && (Math.pow(2, i) < 100)) {
+                    dynamicTexture[i].context.font = "100px monospace";
+                    dynamicTexture[i].drawText(Math.pow(2, i), 8, 96, 'black');
+                } else if ((Math.pow(2, i) > 100) && (Math.pow(2, i) < 1000)) {
+                    dynamicTexture[i].context.font = "70px monospace";
+                    dynamicTexture[i].drawText(Math.pow(2, i), 8, 86, 'black');
+                } else if (Math.pow(2, i) > 1000) {
+                    dynamicTexture[i].context.font = "70px monospace";
+                    dynamicTexture[i].drawText(Math.pow(2, i), 8, 86, 'black');
+                } else {
+                    dynamicTexture[i].context.font = "50px monospace";
+                    dynamicTexture[i].drawText(Math.pow(2, i), 8, 80, 'black');
                 }
-                
+
                 dynamicTexture[i].texture.needsUpdate = true;
             }
 
@@ -131,10 +160,6 @@
             });
 
 
-            // }
-
-
-
             wireGeometry = new THREE.BoxGeometry(0.9, 0.9, 0);
             wireMaterial = new THREE.MeshBasicMaterial({
                 color: 0xffffff,
@@ -150,17 +175,47 @@
 
                     grid[j][i] = new THREE.Mesh(wireGeometry, wireMaterial);
                     grid[j][i].name = "empty";
-                    scene.add(grid[j][i]);
+                    if (debug == true) {
+                        scene.add(grid[j][i]);
+                    }
                 }
             }
 
+            //Score Boxes!
+            //Make Textures
+            scoreTexture = new THREEx.DynamicTexture(128, 64);
+            topScoreTexture = new THREEx.DynamicTexture(128, 64);
+            //Make Material
+            scoreMaterial = new THREE.MeshBasicMaterial({
+                map: scoreTexture.texture
+            });
+            topScoreMaterial = new THREE.MeshBasicMaterial({
+                map: topScoreTexture.texture
+            });
 
+            var scoreGeometry = new THREE.BoxGeometry(1.9, 1, 0.0);
+            //Make Mesh
+            scoreBox = new THREE.Mesh(scoreGeometry, scoreMaterial);
+            topScoreBox = new THREE.Mesh(scoreGeometry, topScoreMaterial);
 
-            renderer = new THREE.WebGLRenderer();
-            renderer.setSize(window.innerWidth, window.innerHeight);
+            //Set Position
+            scoreBox.position.add(new THREE.Vector3(0.5, 4.5, 0));
+            topScoreBox.position.add(new THREE.Vector3(2.5, 4.5, 0));
 
-            document.body.appendChild(renderer.domElement);
+            //Add to Scene
+            scene.add(scoreBox);
+            scene.add(topScoreBox);
+
+            if (initiater == 0) {
+                renderer = new THREE.WebGLRenderer();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                document.body.appendChild(renderer.domElement);
+                initiater = 1;
+            }
+            renderer.setClearColor(col, 1);
+
             AddRandom();
+            UpdateScore();
 
         }
 
@@ -184,13 +239,6 @@
             renderer.render(scene, camera);
 
         }
-
-
-         //left arrow	37
-         //up arrow	    38
-         //right arrow	39
-         //down arrow	40
-
 
         function AddRandom() {
             "use strict";
@@ -252,7 +300,12 @@
                 VerticalMerge();
                 MoveDown()
                 AddRandom();
+            } else if (e.keyCode == '13 ') {
+                //down arrow
+                init();
             }
+            UpdateScore();
+
 
         }
 
@@ -502,8 +555,9 @@
             grid[a[0]][a[1]].position.add(positionA);
             grid[b[0]][b[1]].position.add(positionB);
             scene.add(grid[a[0]][a[1]]);
-            scene.add(grid[b[0]][b[1]]);
-
+            if (debug == true) {
+                scene.add(grid[b[0]][b[1]]);
+            }
         }
 
 
@@ -535,6 +589,57 @@
 
 
             return grid[y][x].name;
+        }
+
+        function UpdateScore() {
+            "use strict";
+            score = 0;
+            grid.forEach(function (array) {
+
+                array.forEach(function (box) {
+                    if (box.name != "empty") {
+                        score += parseInt(box.name);
+                    }
+
+                });
+
+            });
+
+            if (score > topScore) {
+
+                topScore = score;
+            }
+
+            scoreTexture.clear('white');
+            scoreTexture.context.font = "18px monospace";
+            scoreTexture.drawText("Score:", 28, 28, 'black');
+            scoreTexture.drawText(score, 28, 48, 'black');
+            scoreTexture.texture.needsUpdate = true;
+
+
+            topScoreTexture.clear('white');
+            topScoreTexture.context.font = "18px monospace";
+            topScoreTexture.drawText("Best Score:", 12, 28, 'black');
+            topScoreTexture.drawText(topScore, 12, 48, 'black');
+            topScoreTexture.texture.needsUpdate = true;
+
+
+            scoreBox.material.color = ScoreColor(score);
+            topScoreBox.material.color = ScoreColor(topScore);
+
+
+        }
+
+
+        function ScoreColor(findscore) {
+
+            for (var i = 0; i < 12; i++) {
+                if (findscore < Math.pow(2,i)) {
+                    return material2048[i].color;
+                }
+
+            }
+
         }
     </script>
 
