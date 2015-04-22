@@ -31,9 +31,10 @@
             <br>&#8595; &#151; DOWN ARROW
             <br>[ENTER] &#151; RESET
         </p>
-
-
+    
     </section>
+    
+    <section id="bottom"><small>By <a href="http://twitter.com/S0hail05">Sohail Ajmal</a></small></section>
 
     <script>
         "use strict";
@@ -45,8 +46,8 @@
         var wireGeometry, wireMaterial;
         var grid;
         var center;
-        var initiater = 0;
-        var score = 0;
+        var initiater=0;
+        var score;
         var topScore = 0;
         var scoreBox;
         var topScoreBox;
@@ -66,17 +67,16 @@
         function init() {
             "use strict";
 
+            
             score = 0;
-
             scene = new THREE.Scene();
-
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
             camera.position.z = 5;
             camera.position.x = 1.5;
             camera.position.y = 1.5;
             center = new THREE.Vector2(1.5, 1.5);
 
-            geometry = new THREE.BoxGeometry(0.9, 0.9, 0.0);
+            geometry = new THREE.BoxGeometry(0.9, 0.9, 0);
             var col = new THREE.Color(Math.random(), Math.random(), Math.random())
             material = new THREE.MeshBasicMaterial({
                 color: col
@@ -151,7 +151,7 @@
                 map: dynamicTexture[10].texture
             });
             material2048[10] = new THREE.MeshBasicMaterial({
-                color: 0xFF0000,
+                color: 0xffffff,
                 map: dynamicTexture[11].texture
             });
             material2048[11] = new THREE.MeshBasicMaterial({
@@ -183,8 +183,8 @@
 
             //Score Boxes!
             //Make Textures
-            scoreTexture = new THREEx.DynamicTexture(128, 64);
-            topScoreTexture = new THREEx.DynamicTexture(128, 64);
+            scoreTexture = new THREEx.DynamicTexture(256, 128);
+            topScoreTexture = new THREEx.DynamicTexture(256, 128);
             //Make Material
             scoreMaterial = new THREE.MeshBasicMaterial({
                 map: scoreTexture.texture
@@ -207,13 +207,15 @@
             scene.add(topScoreBox);
 
             if (initiater == 0) {
-                renderer = new THREE.WebGLRenderer();
+                renderer = new THREE.WebGLRenderer({
+                    alpha: 1
+                });
                 renderer.setSize(window.innerWidth, window.innerHeight);
                 document.body.appendChild(renderer.domElement);
                 initiater = 1;
             }
-            renderer.setClearColor(col, 1);
-
+            renderer.setClearColor(col, 0.5);
+            document.getElementsByTagName("body");
             AddRandom();
             UpdateScore();
 
@@ -230,7 +232,8 @@
 
                         //array[j][i].position.x = lerp(array[j][i].position.x, i, 0.1);
                         //array[j][i].position.y = lerp(array[j][i].position.y, j, 0.1);
-                        grid[j][i].position.lerp(new THREE.Vector3(i, j, 0), 0.1);
+                        grid[j][i].position.lerp(new THREE.Vector3(i, j, 0), 0.2);
+                        grid[j][i].scale.lerp(new THREE.Vector3(0.9, 0.9, 0), 0.1);
                     }
                 }
             }
@@ -262,8 +265,10 @@
                 scene.remove(grid[random.y][random.x]);
                 grid[random.y][random.x] = new THREE.Mesh(geometry, material2048[0]);
                 grid[random.y][random.x].name = "2";
-                grid[random.y][random.x].position.x = center.x;
-                grid[random.y][random.x].position.y = center.y;
+                grid[random.y][random.x].position.x = random.x;
+                grid[random.y][random.x].position.y = random.y;
+                grid[random.y][random.x].scale.x = 0;
+                grid[random.y][random.x].scale.y = 0;
                 scene.add(grid[random.y][random.x]);
                 return 0;
             }
@@ -550,8 +555,10 @@
             }
 
 
-
-
+            //ScaleDown Effect
+            grid[a[0]][a[1]].scale.x = 1.2;
+            grid[a[0]][a[1]].scale.y = 1.2;
+            
             grid[a[0]][a[1]].position.add(positionA);
             grid[b[0]][b[1]].position.add(positionB);
             scene.add(grid[a[0]][a[1]]);
@@ -611,16 +618,16 @@
             }
 
             scoreTexture.clear('white');
-            scoreTexture.context.font = "18px monospace";
-            scoreTexture.drawText("Score:", 28, 28, 'black');
-            scoreTexture.drawText(score, 28, 48, 'black');
+            scoreTexture.context.font = "30px monospace";
+            scoreTexture.drawText("Score:", 32, 52, 'black');
+            scoreTexture.drawText(score, 32, 90, 'black');
             scoreTexture.texture.needsUpdate = true;
 
 
             topScoreTexture.clear('white');
-            topScoreTexture.context.font = "18px monospace";
-            topScoreTexture.drawText("Best Score:", 12, 28, 'black');
-            topScoreTexture.drawText(topScore, 12, 48, 'black');
+            topScoreTexture.context.font = "30px monospace";
+            topScoreTexture.drawText("Best Score:", 32, 52, 'black');
+            topScoreTexture.drawText(topScore, 32, 90, 'black');
             topScoreTexture.texture.needsUpdate = true;
 
 
@@ -634,7 +641,7 @@
         function ScoreColor(findscore) {
 
             for (var i = 0; i < 12; i++) {
-                if (findscore < Math.pow(2,i)) {
+                if (findscore < Math.pow(2, i)) {
                     return material2048[i].color;
                 }
 

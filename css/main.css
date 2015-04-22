@@ -87,6 +87,35 @@ textarea {
    Author's custom styles
    ========================================================================== */
 
+body{
+
+background: rgb(200,200,200);
+background: -moz-radial-gradient(center, ellipse cover,  rgba(200,200,200,1) 0%, rgba(0,0,0,1) 100%);
+background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%,rgba(255,255,255,1)), color-stop(100%,rgba(0,0,0,1)));
+background: -webkit-radial-gradient(center, ellipse cover,  rgba(200,200,200,1) 0%,rgba(0,0,0,1) 100%);
+background: -o-radial-gradient(center, ellipse cover,  rgba(200,200,200,1) 0%,rgba(0,0,0,1) 100%);
+background: -ms-radial-gradient(center, ellipse cover,  rgba(200,200,200,1) 0%,rgba(0,0,0,1) 100%);
+background: radial-gradient(ellipse at center,  rgba(200,200,200,1) 0%,rgba(0,0,0,1) 100%);
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#000000',GradientType=1 );
+
+
+}
+
+#bottom{
+    
+    padding: 10px;
+    position:absolute;
+    bottom:0px;
+    border-radius: 5px;
+    color: white;
+
+}
+
+#bottom a{
+    
+    color: white;
+}
+
 #info {
     position: absolute;
     top: 0;
