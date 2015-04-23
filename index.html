@@ -5,16 +5,14 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <title>WebGL 2048</title>
-    <meta name="description" content="">
+    <meta name="description" content="A 2048 clone made in WebGL with Three.js">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link rel="stylesheet" href="css/normalize.css">
     <link rel="stylesheet" href="css/main.css">
-    <script src="js/vendor/modernizr-2.8.3.min.js"></script>
 
     <script src="js/three.min.js"></script>
     <script src="js/threex.dynamictexture.js"></script>
-    <script src="js/vendor/jquery-1.11.2.min.js"></script>
 
 </head>
 
@@ -31,22 +29,20 @@
             <br>&#8595; &#151; DOWN ARROW
             <br>[ENTER] &#151; RESET
         </p>
-    
+
     </section>
-    
-    <section id="bottom"><small>By <a href="http://twitter.com/S0hail05">Sohail Ajmal</a></small></section>
+
+    <section id="bottom"><small>By <a href="http://twitter.com/S0hail05">Sohail Ajmal</a></small>
+    </section>
 
     <script>
         "use strict";
 
-         //By Sohail Ajmal twitter@Sohail05
-
         var scene, camera, renderer;
-        var geometry, material, mesh;
+        var geometry, material;
         var wireGeometry, wireMaterial;
         var grid;
-        var center;
-        var initiater=0;
+        var initiater = 0;
         var score;
         var topScore = 0;
         var scoreBox;
@@ -55,60 +51,73 @@
         var topScoreTexture;
         var scoreMaterial;
         var topScoreMaterial
-        var debug = true;
+        var debug = false;
 
          //2 4 8 16 32 64 128 256 1024 2048
         var material2048;
 
         document.onkeydown = inputKey;
+        window.onresize = WindowResize;
+
         init();
         animate();
 
         function init() {
             "use strict";
 
-            
+
             score = 0;
+            //Scene setup
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
             camera.position.z = 5;
             camera.position.x = 1.5;
             camera.position.y = 1.5;
-            center = new THREE.Vector2(1.5, 1.5);
 
+            //Random Color
+            var col = new THREE.Color(Math.random(), Math.random(), Math.random());
+
+            //Geometry
             geometry = new THREE.BoxGeometry(0.9, 0.9, 0);
-            var col = new THREE.Color(Math.random(), Math.random(), Math.random())
-            material = new THREE.MeshBasicMaterial({
-                color: col
-            });
+            //Random Color Material
+            //material = new THREE.MeshBasicMaterial({color: col});
 
-            material2048 = new Array(12);
-
+            //Text Textures
             var dynamicTexture = [];
             for (var i = 0; i < 13; i++) {
 
                 dynamicTexture[i] = new THREEx.DynamicTexture(128, 128);
                 dynamicTexture[i].clear('white');
 
+
                 if ((Math.pow(2, i) > 0) && (Math.pow(2, i) < 10)) {
+                    //1 digit text
                     dynamicTexture[i].context.font = "120px monospace";
                     dynamicTexture[i].drawText(Math.pow(2, i), 30, 100, 'black');
                 } else if ((Math.pow(2, i) > 10) && (Math.pow(2, i) < 100)) {
+                    //2 digit text
                     dynamicTexture[i].context.font = "100px monospace";
                     dynamicTexture[i].drawText(Math.pow(2, i), 8, 96, 'black');
                 } else if ((Math.pow(2, i) > 100) && (Math.pow(2, i) < 1000)) {
+                    //3 digit text
                     dynamicTexture[i].context.font = "70px monospace";
                     dynamicTexture[i].drawText(Math.pow(2, i), 8, 86, 'black');
                 } else if (Math.pow(2, i) > 1000) {
+                    //4 digit text
                     dynamicTexture[i].context.font = "70px monospace";
                     dynamicTexture[i].drawText(Math.pow(2, i), 8, 86, 'black');
                 } else {
+                    //shouldn't happen, set to red if it does
                     dynamicTexture[i].context.font = "50px monospace";
-                    dynamicTexture[i].drawText(Math.pow(2, i), 8, 80, 'black');
+                    dynamicTexture[i].drawText(Math.pow(2, i), 8, 80, 'red');
                 }
-
+                console.log(Math.pow(2, i));
                 dynamicTexture[i].texture.needsUpdate = true;
             }
+
+
+            //Block Materials
+            material2048 = new Array(12);
 
             material2048[0] = new THREE.MeshBasicMaterial({
                 color: 0x66FF66,
@@ -151,7 +160,7 @@
                 map: dynamicTexture[10].texture
             });
             material2048[10] = new THREE.MeshBasicMaterial({
-                color: 0xffffff,
+                color: 0x990000,
                 map: dynamicTexture[11].texture
             });
             material2048[11] = new THREE.MeshBasicMaterial({
@@ -159,15 +168,14 @@
                 map: dynamicTexture[12].texture
             });
 
-
+            //Empty blocks
             wireGeometry = new THREE.BoxGeometry(0.9, 0.9, 0);
             wireMaterial = new THREE.MeshBasicMaterial({
                 color: 0xffffff,
                 wireframe: true
             });
 
-            mesh = new THREE.Mesh(geometry, material);
-
+            //Fill 4x4 array with blocks
             grid = new Array(4);
             for (var j = 0; j < 4; j++) {
                 grid[j] = new Array(4);
@@ -181,11 +189,36 @@
                 }
             }
 
+
+            //Backplanes
+            var BackGeometry = new THREE.BoxGeometry(0.9, 0.9, 0);
+            var BackColor = new THREE.Color(0xcccccc);
+
+            for (var j = 0; j < 4; j++) {
+                for (var i = 0; i < 4; i++) {
+
+                    var BackMaterial = new THREE.MeshBasicMaterial({color: BackColor });
+                    var Backplane = new THREE.Mesh(BackGeometry, BackMaterial);
+
+                    Backplane.position.x = i;
+                    Backplane.position.y = j;
+                    Backplane.position.z = -0.01;
+                    scene.add(Backplane);
+                }
+            }
+
+
+
+
             //Score Boxes!
-            //Make Textures
+
+            //Geometry
+            var scoreGeometry = new THREE.BoxGeometry(1.9, 1, 0.0);
+
+            //Text Textures
             scoreTexture = new THREEx.DynamicTexture(256, 128);
             topScoreTexture = new THREEx.DynamicTexture(256, 128);
-            //Make Material
+            //Materials
             scoreMaterial = new THREE.MeshBasicMaterial({
                 map: scoreTexture.texture
             });
@@ -193,12 +226,11 @@
                 map: topScoreTexture.texture
             });
 
-            var scoreGeometry = new THREE.BoxGeometry(1.9, 1, 0.0);
-            //Make Mesh
+            //Make Meshs
             scoreBox = new THREE.Mesh(scoreGeometry, scoreMaterial);
             topScoreBox = new THREE.Mesh(scoreGeometry, topScoreMaterial);
 
-            //Set Position
+            //Set Positions
             scoreBox.position.add(new THREE.Vector3(0.5, 4.5, 0));
             topScoreBox.position.add(new THREE.Vector3(2.5, 4.5, 0));
 
@@ -206,6 +238,7 @@
             scene.add(scoreBox);
             scene.add(topScoreBox);
 
+            //Run only once
             if (initiater == 0) {
                 renderer = new THREE.WebGLRenderer({
                     alpha: 1
@@ -214,35 +247,99 @@
                 document.body.appendChild(renderer.domElement);
                 initiater = 1;
             }
+
+            //Set background to random color
             renderer.setClearColor(col, 0.5);
             document.getElementsByTagName("body");
+
+            //Add initial block and update score board
             AddRandom();
             UpdateScore();
 
         }
 
+         //animation loop
         function animate() {
             "use strict";
             requestAnimationFrame(animate);
+
+            Update();
+            renderer.render(scene, camera);
+
+        }
+
+
+         //Block smooth move
+        function Update() {
 
             for (var j = 0; j < 4; j++) {
                 for (var i = 0; i < 4; i++) {
 
                     if (grid[j][i] != null) {
 
-                        //array[j][i].position.x = lerp(array[j][i].position.x, i, 0.1);
-                        //array[j][i].position.y = lerp(array[j][i].position.y, j, 0.1);
                         grid[j][i].position.lerp(new THREE.Vector3(i, j, 0), 0.2);
                         grid[j][i].scale.lerp(new THREE.Vector3(0.9, 0.9, 0), 0.1);
                     }
                 }
             }
+        }
 
+         //Keyboard Inputs
+        function inputKey(event) {
+            "use strict";
+            event = event || window.event;
 
-            renderer.render(scene, camera);
+            //keep track if any change has been done
+            var change = 0;
+            if (event.keyCode == '37') {
+                //left arrow
+                change += HorizontalMerge();
+                change += MoveLeft();
+
+                if (change > 0) {
+                    AddRandom();
+                }
+
+            } else if (event.keyCode == '38') {
+                //up arrow
+                change += VerticalMerge();
+                change += MoveUp()
+                if (change > 0) {
+                    AddRandom();
+                }
+            } else if (event.keyCode == '39') {
+                //right arrow
+                change += HorizontalMerge();
+                change += MoveRight();
+                if (change > 0) {
+                    AddRandom();
+                }
+            } else if (event.keyCode == '40') {
+                //down arrow
+                change += VerticalMerge();
+                change += MoveDown()
+                if (change > 0) {
+                    AddRandom();
+                }
+            } else if (event.keyCode == '13 ') {
+                //Enter key
+                init();
+            }
+            UpdateScore();
 
         }
 
+        function WindowResize(event) {
+            "use strict";
+            event = event || window.event;
+
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+
+        }
+
+         //Add block after each move
         function AddRandom() {
             "use strict";
             var location = [];
@@ -256,7 +353,6 @@
                     }
                 }
             }
-
 
             if (location.length > 0) {
 
@@ -277,54 +373,11 @@
 
         }
 
-
-
-
-        function inputKey(e) {
-            "use strict";
-            e = e || window.event;
-
-            if (e.keyCode == '37') {
-                //left arrow
-                HorizontalMerge();
-                MoveLeft();
-                AddRandom();
-
-            } else if (e.keyCode == '38') {
-                //up arrow
-                VerticalMerge();
-                MoveUp()
-                AddRandom();
-            } else if (e.keyCode == '39') {
-                //right arrow
-                HorizontalMerge();
-                MoveRight();
-                AddRandom();
-            } else if (e.keyCode == '40') {
-                //down arrow
-                VerticalMerge();
-                MoveDown()
-                AddRandom();
-            } else if (e.keyCode == '13 ') {
-                //down arrow
-                init();
-            }
-            UpdateScore();
-
-
-        }
-
-         //This is to give the smooth movement effect 
-        function lerp(v0, v1, t) {
-            "use strict";
-            return (1 - t) * v0 + t * v1;
-        }
-
-
+        /*************************** Move Functions ********************************/
 
         function MoveLeft() {
             "use strict";
-
+            var moveCount = 0;
             for (var j = 0; j < 4; j++) {
 
                 for (var i = 1; i < 4; i++) {
@@ -335,18 +388,20 @@
 
                             if (grid[j][c].name == "empty") {
                                 Swap([j, i], [j, c]);
+                                moveCount++;
 
                             }
                         }
                     }
                 }
             }
+            return moveCount;
         }
 
 
         function MoveRight() {
             "use strict";
-
+            var moveCount = 0;
             for (var j = 3; j >= 0; j--) {
 
                 for (var i = 2; i >= 0; i--) {
@@ -357,17 +412,18 @@
 
                             if (grid[j][c].name == "empty") {
                                 Swap([j, i], [j, c]);
-
+                                moveCount++;
                             }
                         }
                     }
                 }
             }
+            return moveCount;
         }
 
         function MoveDown() {
             "use strict";
-
+            var moveCount = 0;
             for (var i = 0; i < 4; i++) {
 
                 for (var j = 1; j < 4; j++) {
@@ -378,17 +434,18 @@
 
                             if (grid[c][i].name == "empty") {
                                 Swap([j, i], [c, i]);
-
+                                moveCount++;
                             }
                         }
                     }
                 }
             }
+            return moveCount;
         }
 
         function MoveUp() {
             "use strict";
-
+            var moveCount = 0;
             for (var j = 3; j >= 0; j--) {
 
                 for (var i = 3; i >= 0; i--) {
@@ -399,13 +456,16 @@
 
                             if (grid[c][i].name == "empty") {
                                 Swap([j, i], [c, i]);
-
+                                moveCount++;
                             }
                         }
                     }
                 }
             }
+            return moveCount;
         }
+
+        /*************************** Merge Functions ********************************/
 
         function HorizontalMerge() {
             "use strict";
@@ -425,6 +485,7 @@
 
                                 if (grid[j][i].name == grid[j][z].name) {
                                     mergeBlock([j, i], [j, z]);
+                                    mergeCount++;
                                 }
                                 break;
                             }
@@ -432,8 +493,8 @@
                     }
                 }
             }
+            return mergeCount;
         }
-         //end of HorizontalMerge
 
         function VerticalMerge() {
             "use strict";
@@ -452,6 +513,7 @@
 
                                 if (grid[j][i].name == grid[z][i].name) {
                                     mergeBlock([j, i], [z, i]);
+                                    mergeCount++;
                                 }
                                 break;
                             }
@@ -459,15 +521,16 @@
                     }
                 }
             }
+            return mergeCount;
         }
-         //end of VerticalMerge
 
 
         function mergeBlock(a, b) {
 
-
+            //Save last position
             var positionA = grid[a[0]][a[1]].position;
             var positionB = grid[b[0]][b[1]].position;
+            //Remove from scene
             scene.remove(grid[a[0]][a[1]]);
             scene.remove(grid[b[0]][b[1]]);
 
@@ -554,19 +617,73 @@
 
             }
 
-
-            //ScaleDown Effect
+            //Scaledown Effect
             grid[a[0]][a[1]].scale.x = 1.2;
             grid[a[0]][a[1]].scale.y = 1.2;
-            
+            //Re-assign positions
             grid[a[0]][a[1]].position.add(positionA);
             grid[b[0]][b[1]].position.add(positionB);
+            //Add to scene
             scene.add(grid[a[0]][a[1]]);
+
             if (debug == true) {
                 scene.add(grid[b[0]][b[1]]);
             }
         }
 
+
+        /******************************* Score function *****************************/
+
+        function UpdateScore() {
+            "use strict";
+            score = 0;
+
+            //Add up current score
+            grid.forEach(function (array) {
+                array.forEach(function (box) {
+                    if (box.name != "empty") {
+                        score += parseInt(box.name);
+                    }
+                });
+            });
+
+            //Set Top Score
+            if (score > topScore) {
+
+                topScore = score;
+            }
+
+            //Update Score text
+            scoreTexture.clear('white');
+            scoreTexture.context.font = "30px monospace";
+            scoreTexture.drawText("Score:", 32, 52, 'black');
+            scoreTexture.drawText(score, 32, 90, 'black');
+            scoreTexture.texture.needsUpdate = true;
+
+            //Update Top Score text
+            topScoreTexture.clear('white');
+            topScoreTexture.context.font = "30px monospace";
+            topScoreTexture.drawText("Best Score:", 32, 52, 'black');
+            topScoreTexture.drawText(topScore, 32, 90, 'black');
+            topScoreTexture.texture.needsUpdate = true;
+
+            //Assign Colors
+            scoreBox.material.color = ScoreColor(score);
+            topScoreBox.material.color = ScoreColor(topScore);
+
+        }
+
+         //Get color according to score
+        function ScoreColor(findscore) {
+
+            for (var i = 0; i < 12; i++) {
+                if (findscore <= Math.pow(2, i)) {
+                    return material2048[i - 1].color;
+                }
+            }
+        }
+
+        /********************** Helper/debug functions ****************************/
 
         function makeBlock(str) {
 
@@ -581,84 +698,26 @@
 
         }
 
+        function lerp(v0, v1, t) {
+            "use strict";
+            return (1 - t) * v0 + t * v1;
+        }
 
         function Swap(a, b) {
-
 
             var tmp = grid[a[0]][a[1]];
             grid[a[0]][a[1]] = grid[b[0]][b[1]];
             grid[b[0]][b[1]] = tmp;
 
-
         }
 
         function CheckGridName(x, y) {
 
-
             return grid[y][x].name;
         }
-
-        function UpdateScore() {
-            "use strict";
-            score = 0;
-            grid.forEach(function (array) {
-
-                array.forEach(function (box) {
-                    if (box.name != "empty") {
-                        score += parseInt(box.name);
-                    }
-
-                });
-
-            });
-
-            if (score > topScore) {
-
-                topScore = score;
-            }
-
-            scoreTexture.clear('white');
-            scoreTexture.context.font = "30px monospace";
-            scoreTexture.drawText("Score:", 32, 52, 'black');
-            scoreTexture.drawText(score, 32, 90, 'black');
-            scoreTexture.texture.needsUpdate = true;
-
-
-            topScoreTexture.clear('white');
-            topScoreTexture.context.font = "30px monospace";
-            topScoreTexture.drawText("Best Score:", 32, 52, 'black');
-            topScoreTexture.drawText(topScore, 32, 90, 'black');
-            topScoreTexture.texture.needsUpdate = true;
-
-
-            scoreBox.material.color = ScoreColor(score);
-            topScoreBox.material.color = ScoreColor(topScore);
-
-
-        }
-
-
-        function ScoreColor(findscore) {
-
-            for (var i = 0; i < 12; i++) {
-                if (findscore < Math.pow(2, i)) {
-                    return material2048[i].color;
-                }
-
-            }
-
-        }
     </script>
 
-
-
-
-    <!--   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>-->
-    <script>
-        window.jQuery || document.write('<script src="js/vendor/jquery-1.11.2.min.js"><\/script>')
-    </script>
     <script src="js/plugins.js"></script>
-    <script src="js/main.js"></script>
 </body>
 
 </html>
