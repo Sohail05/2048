@@ -6,7 +6,7 @@
 - Text made with [Threex.dynamictexture](https://github.com/jeromeetienne/threex.dynamictexture) extension
 
 
-Live [Demo](http://polygone.xyz/2048/) 
+Live [Demo](http://sohail05.github.io/2048/) 
 
 ![ScreenShot](image.png)
 
